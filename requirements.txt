@@ -7,3 +7,6 @@ black==23.9.1
 
 # Isort for sorting imports
 isort==5.12.0
+
+# pylint for code linting
+pylint==2.20.0
