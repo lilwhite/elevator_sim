@@ -1,0 +1,3 @@
+# Pytest requirements for testing
+
+Pytest==7.4.0
