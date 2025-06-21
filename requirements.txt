@@ -1,3 +1,9 @@
 # Pytest requirements for testing
 
 Pytest==7.4.0
+
+# Black for code formatting
+black==23.9.1
+
+# Isort for sorting imports
+isort==5.12.0
