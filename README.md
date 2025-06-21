@@ -4,9 +4,9 @@ Este proyecto modela un sistema realista de ascensores utilizando programación 
 
 ---
 
-[![CI](https://github.com/lilwhite/elevator_sim/actions/workflows/ci.yml/badge.svg)](https://github.com/lilwhite/elevator_sim/actions/workflows/ci.yml)
+[![CI](https://github.com/lilwhite/elevator_sim/actions/workflows/ci-python.yml/badge.svg)](https://github.com/lilwhite/elevator_sim/actions/workflows/ci-python.yml)
 [![Lint](https://github.com/lilwhite/elevator_sim/actions/workflows/pylint.yml/badge.svg)](https://github.com/lilwhite/elevator_sim/actions/workflows/pylint.yml)
-[![Python Version](https://img.shields.io/badge/python-3.8%2C3.9%2C3.10-blue)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.13.5-blue)](https://www.python.org/)
 
 ---
 
