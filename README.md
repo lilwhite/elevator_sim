@@ -43,6 +43,8 @@ elevator_sim/
 
 ## 🧱 Estructura del sistema
 
+![Diagrama UML](assets/diagrams/uml.png)
+
 | Clase           | Descripción breve | Estado |
 |------------------|-------------------|--------|
 | `Elevator`       | Representa el ascensor: controla su posición, carga, puertas, dirección y solicitudes. | ✅ |
