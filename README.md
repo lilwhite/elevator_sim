@@ -43,7 +43,7 @@ elevator_sim/
 
 ## 🧱 Estructura del sistema
 
-![Diagrama UML](assets/diagrams/uml.jpg)
+![Diagrama UML](assets/diagrams/UML.jpg)
 
 | Clase           | Descripción breve | Estado |
 |------------------|-------------------|--------|
