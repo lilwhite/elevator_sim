@@ -13,21 +13,17 @@ class Controller:
         self,
         id: int,
         elevator: Elevator,
-        floor_panels: List[FloorPanel],
+        floor_panels: list[FloorPanel],
         logger: Logger,
+        users: list[User] = None,      # <-- parámetro opcional
     ):
-        # Identificador único del controlador
-        self.id: int = id
-        # Ascensor gestionado
-        self.elevator: Elevator = elevator
-        # Paneles de llamada externa
-        self.floor_panels: List[FloorPanel] = floor_panels
-        # Sistema de log
-        self.logger: Logger = logger
-        # Lista de solicitudes externas
-        self.pending_requests: List[int] = []
-        # Tiempo interno del controlador
-        self.time: float = 0.0
+        self.id               = id
+        self.elevator         = elevator
+        self.floor_panels     = floor_panels
+        self.logger           = logger
+        self.pending_requests = []
+        # Inicializa self.users
+        self.users            = users if users is not None else []
 
     def run_tick(self, dt: float) -> None:
         """

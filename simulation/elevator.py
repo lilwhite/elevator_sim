@@ -57,55 +57,53 @@ class Elevator:
             self.target_floors.append(floor)
 
     def step(self, dt: float) -> None:
-        # … lógica de puertas y emergencia …
+        # 1) Emergencia
+        if self.emergency_state:
+            return
 
-        # 3) Sin destinos: idle
+        # 2) Anima puertas si están moviéndose
+        if self.door_status in ("opening", "closing"):
+            self.door.tick(dt)
+            return
+
+        # 3) Si no hay peticiones, idle
         if not self.target_floors:
             self.is_moving = False
             return
 
-        # 4) Desplazamiento delegado a move_towards_target
+        # 4) Arrancamos movimiento delegando en move_towards_target
         self.is_moving = True
         self.move_towards_target(dt)
 
 
+
     def move_towards_target(self, dt: float) -> None:
-        """
-        Mueve la posición usando el motor y actualiza current_floor.
-        Si llega al destino, detiene el motor y abre la puerta.
-        """
-        # Sin destinos, aseguramos que el motor pare
         if not self.target_floors:
-            self.motor.stop()
             return
 
-        # 1) Calculamos próximo piso y dirección
         next_floor = self.target_floors[0]
+        # Asegura dirección y velocidad
         self.update_direction()
-        self.motor.set_direction(self.direction)
-        self.motor.set_target_speed(self.speed_mps)
-        self.motor.start()
+        # Mueve la posición “física”
+        delta = self.speed_mps * dt * (1 if self.direction == "up" else -1)
+        self.position_m += delta
 
-        # 2) Actualizamos motor y posición
-        self.motor.update(dt)
-        self.position_m = self.motor.get_position()
-
-        # 3) Reflectir posición en current_floor (parte entera)
+        # Actualiza el piso actual como la parte entera de la posición
         new_floor = int(self.position_m)
         if new_floor != self.current_floor:
             self.current_floor = new_floor
 
-        # 4) Comprobar llegada al destino
-        arrived_up   = self.direction == "up"   and self.position_m >= next_floor
-        arrived_down = self.direction == "down" and self.position_m <= next_floor
-        if arrived_up or arrived_down:
-            # Alineamos con exactitud de piso
-            self.motor.stop()
-            self.position_m   = float(next_floor)
+        # Si alcanzamos o superamos el destino:
+        if (self.direction == "up"   and self.position_m >= next_floor) or \
+        (self.direction == "down" and self.position_m <= next_floor):
+            # Fija la posición exacta y el piso
+            self.position_m = float(next_floor)
             self.current_floor = next_floor
+            # Retira la petición atendida
             self.target_floors.pop(0)
-            # Abrimos puertas al llegar
+            # Abre puertas
             self.open_door()
+
 
     def open_door(self) -> None:
         """Inicia la apertura de la puerta."""

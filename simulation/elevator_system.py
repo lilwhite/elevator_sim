@@ -36,8 +36,9 @@ class ElevatorSystem:
             self.floor_panels[floor] = panel
 
     def add_elevator(self, elevator: Elevator, controller: Controller) -> None:
-        """Añade un ascensor y su controlador al sistema."""
         self.elevators.append(elevator)
+        # Vinculamos el listado global de usuarios al controlador
+        controller.users = self.users
         self.controllers.append(controller)
 
     def add_user(self, user: User) -> None:
