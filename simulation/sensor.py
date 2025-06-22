@@ -32,28 +32,42 @@ class Sensor:
 
     def read(self) -> Any:
         """Devuelve el valor actual del sensor."""
-        pass
+        return self.value
 
     def update(self, value: Any) -> None:
-        """Actualiza el valor del sensor y el timestamp."""
-        pass
+        """Actualiza el valor del sensor y el timestamp si está activo."""
+        if not self.active:
+            return
+        self.value = value
+        self.last_updated = self.timestamp_fn()
 
     def is_triggered(self) -> bool:
         """Retorna True si `value` supera `threshold` (si aplica)."""
-        pass
+        if self.value is None:
+            return False
+        try:
+            return float(self.value) > self.threshold
+        except (TypeError, ValueError):
+            return False
 
     def calibrate(self, offset: float) -> None:
-        """Ajusta el valor base del sensor."""
-        pass
+        """Ajusta el valor base del sensor añadiendo un offset."""
+        if self.value is not None:
+            try:
+                self.value = self.value + offset
+            except TypeError:
+                pass
 
     def enable(self) -> None:
         """Habilita el sensor."""
-        pass
+        self.active = True
 
     def disable(self) -> None:
         """Deshabilita el sensor."""
-        pass
+        self.active = False
 
     def reset(self) -> None:
         """Reinicia el sensor a estado por defecto."""
-        pass
+        self.value = None
+        self.last_updated = 0.0
+        self.active = True

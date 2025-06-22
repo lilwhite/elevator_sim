@@ -14,7 +14,7 @@ class FloorPanel:
         self.id: int = id
         # Piso asociado al panel
         self.floor: int = floor
-        # Botones de llamada
+        # Botones de llamada disponibles
         self.has_up_button: bool = floor < max_floor
         self.has_down_button: bool = floor > min_floor
         # Estado de los botones
@@ -26,24 +26,35 @@ class FloorPanel:
 
     def press_up(self) -> None:
         """Marca el botón de subida como presionado y enciende la luz si existe."""
-        pass
+        if self.has_up_button:
+            self.up_pressed = True
+            self.indicator_up = True
 
     def press_down(self) -> None:
         """Marca el botón de bajada como presionado y enciende la luz si existe."""
-        pass
+        if self.has_down_button:
+            self.down_pressed = True
+            self.indicator_down = True
 
     def reset_up(self) -> None:
         """Resetea el estado del botón e indicador de subida."""
-        pass
+        self.up_pressed = False
+        self.indicator_up = False
 
     def reset_down(self) -> None:
         """Resetea el estado del botón e indicador de bajada."""
-        pass
+        self.down_pressed = False
+        self.indicator_down = False
 
     def is_active(self) -> bool:
         """Devuelve True si alguno de los botones está presionado."""
-        pass
+        return self.up_pressed or self.down_pressed
 
-    def get_requested_directions(self) -> list:
+    def get_requested_directions(self) -> list[str]:
         """Devuelve lista de direcciones solicitadas: ['up'], ['down'], o ambas."""
-        pass
+        directions: list[str] = []
+        if self.up_pressed:
+            directions.append("up")
+        if self.down_pressed:
+            directions.append("down")
+        return directions

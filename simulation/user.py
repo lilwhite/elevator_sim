@@ -1,49 +1,46 @@
-class FloorPanel:
+class User:
     """
-    Representa el panel de llamada externa en cada piso con botones de subida y bajada.
+    Modela a un usuario que llama al ascensor y selecciona un destino.
     """
 
     def __init__(
         self,
         id: int,
-        floor: int,
-        min_floor: int,
-        max_floor: int,
+        weight_kg: float,
+        current_floor: int = 1,
     ):
-        # Identificador único del panel
+        # Identificador único del usuario
         self.id: int = id
-        # Piso asociado al panel
-        self.floor: int = floor
-        # Botones de llamada
-        self.has_up_button: bool = floor < max_floor
-        self.has_down_button: bool = floor > min_floor
-        # Estado de los botones
-        self.up_pressed: bool = False
-        self.down_pressed: bool = False
-        # Indicadores luminosos
-        self.indicator_up: bool = False
-        self.indicator_down: bool = False
+        # Peso del usuario (kg)
+        self.weight_kg: float = weight_kg
+        # Piso actual donde se encuentra
+        self.current_floor: int = current_floor
+        # Piso destino seleccionado (None si no hay)
+        self.destination_floor: int = None
+        # Estado: dentro del ascensor o esperando
+        self.inside_elevator: bool = False
+        self.waiting: bool = False
 
-    def press_up(self) -> None:
-        """Marca el botón de subida como presionado y enciende la luz si existe."""
+    def call_elevator(self, direction: str) -> None:
+        """Llama al ascensor desde su piso ('up' o 'down')."""
         pass
 
-    def press_down(self) -> None:
-        """Marca el botón de bajada como presionado y enciende la luz si existe."""
+    def enter_elevator(self) -> None:
+        """Marca que el usuario ha entrado al ascensor."""
         pass
 
-    def reset_up(self) -> None:
-        """Resetea el estado del botón e indicador de subida."""
+    def select_floor(self, floor: int) -> None:
+        """Selecciona el piso destino dentro del ascensor."""
         pass
 
-    def reset_down(self) -> None:
-        """Resetea el estado del botón e indicador de bajada."""
+    def exit_elevator(self) -> None:
+        """Marca que el usuario ha salido del ascensor."""
         pass
 
-    def is_active(self) -> bool:
-        """Devuelve True si alguno de los botones está presionado."""
+    def wait_for_elevator(self) -> None:
+        """Establece el estado de espera tras llamar al ascensor."""
         pass
 
-    def get_requested_directions(self) -> list:
-        """Devuelve lista de direcciones solicitadas: ['up'], ['down'], o ambas."""
+    def cancel_request(self) -> None:
+        """Cancela la solicitud de llamada o destino previo."""
         pass
