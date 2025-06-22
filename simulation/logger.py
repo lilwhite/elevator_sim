@@ -72,4 +72,5 @@ class Logger:
                 for entry in self.logs:
                     f.write(entry + "\n")
         except Exception:
-            pass
+            self.log(f"Error exporting logs to {path}", level="ERROR")
+            raise

@@ -56,7 +56,7 @@ class Sensor:
             try:
                 self.value = self.value + offset
             except TypeError:
-                pass
+                raise ValueError("No se puede calibrar el sensor con el valor actual.")
 
     def enable(self) -> None:
         """Habilita el sensor."""

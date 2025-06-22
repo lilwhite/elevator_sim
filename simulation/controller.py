@@ -30,13 +30,23 @@ class Controller:
         self.time: float = 0.0
 
     def run_tick(self, dt: float) -> None:
-        """Avanza un ciclo de simulación de dt segundos."""
-        # Procesar solicitudes pendientes
+        """
+        Avanza un ciclo de simulación de dt segundos:
+          • Procesa solicitudes pendientes
+          • Mueve el ascensor
+          • Gestiona la entrada/salida de usuarios
+        """
+        # 1) Procesar llamadas
         self.handle_requests()
-        # Avanzar simulación del ascensor
+
+        # 2) Mover ascensor
         self.elevator.step(dt)
-        # Actualizar tiempo
-        self.time += dt
+
+        # 3) Actualizar usuarios (entradas/salidas)
+        self.update_users()
+
+        # 4) Incrementar tiempo si lo necesitas aquí
+        #	self.time += dt  # si no lo haces en ElevatorSystem
 
     def handle_requests(self) -> None:
         """Procesa las solicitudes internas y externas pendientes."""
@@ -61,9 +71,37 @@ class Controller:
             self.logger.log(f"Added internal request: floor {floor}", level="INFO")
 
     def update_users(self) -> None:
-        """Gestiona las acciones de los usuarios (entrar, salir, llamar)."""
-        # Módulo opcional: lógica de usuarios
-        pass
+        """
+        Gestiona las interacciones de los usuarios:
+          1. Si un usuario está esperando y el ascensor ha llegado a su piso con puertas abiertas → entra.
+          2. Tras entrar, si tiene un destino, se añade la petición interna.
+          3. Si un usuario está dentro y el ascensor ha llegado a su destino con puertas abiertas → sale.
+        """
+        for user in self.users:
+            # 1) Entrada al ascensor
+            if user.waiting and not user.inside_elevator:
+                if (
+                    self.elevator.current_floor == user.current_floor
+                    and self.elevator.door_status == "open"
+                ):
+                    user.enter_elevator()
+                    self.log_event(
+                        f"User {user.id} entered elevator at floor {user.current_floor}"
+                    )
+                    # 2) Petición interna tras entrar
+                    if user.destination_floor is not None:
+                        self.add_internal_request(user.destination_floor)
+
+            # 3) Salida del ascensor
+            if (
+                user.inside_elevator
+                and user.destination_floor == self.elevator.current_floor
+                and self.elevator.door_status == "open"
+            ):
+                user.exit_elevator()
+                self.log_event(
+                    f"User {user.id} exited elevator at floor {user.current_floor}"
+                )
 
     def log_event(self, event: str) -> None:
         """Envía un evento al logger."""

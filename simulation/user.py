@@ -1,46 +1,55 @@
-class User:
-    """
-    Modela a un usuario que llama al ascensor y selecciona un destino.
-    """
+# simulation/user.py
 
+from typing import Optional
+
+class User:
     def __init__(
         self,
         id: int,
         weight_kg: float,
-        current_floor: int = 1,
+        current_floor: int
     ):
-        # Identificador único del usuario
         self.id: int = id
-        # Peso del usuario (kg)
-        self.weight_kg: float = weight_kg
-        # Piso actual donde se encuentra
         self.current_floor: int = current_floor
-        # Piso destino seleccionado (None si no hay)
-        self.destination_floor: int = None
-        # Estado: dentro del ascensor o esperando
+        self.destination_floor: Optional[int] = None
         self.inside_elevator: bool = False
         self.waiting: bool = False
+        self.weight_kg: float = weight_kg
 
     def call_elevator(self, direction: str) -> None:
-        """Llama al ascensor desde su piso ('up' o 'down')."""
-        pass
+        """
+        Marca al usuario como en espera y (opcional) almacena la dirección deseada.
+        """
+        self.waiting = True
+        # Si necesitas almacenar direction para lógica futura, podrías hacerlo:
+        # self.call_direction = direction
 
     def enter_elevator(self) -> None:
-        """Marca que el usuario ha entrado al ascensor."""
-        pass
+        """
+        El usuario entra al ascensor.
+        """
+        if self.waiting:
+            self.inside_elevator = True
+            self.waiting = False
 
     def select_floor(self, floor: int) -> None:
-        """Selecciona el piso destino dentro del ascensor."""
-        pass
+        """
+        Selecciona el piso destino dentro del ascensor.
+        """
+        if self.inside_elevator:
+            self.destination_floor = floor
 
     def exit_elevator(self) -> None:
-        """Marca que el usuario ha salido del ascensor."""
-        pass
+        """
+        El usuario sale del ascensor al llegar al destino.
+        """
+        if self.inside_elevator and self.destination_floor is not None:
+            self.inside_elevator = False
+            self.current_floor = self.destination_floor
+            self.destination_floor = None
 
     def wait_for_elevator(self) -> None:
-        """Establece el estado de espera tras llamar al ascensor."""
-        pass
-
-    def cancel_request(self) -> None:
-        """Cancela la solicitud de llamada o destino previo."""
-        pass
+        """
+        Pon al usuario en estado de espera.
+        """
+        self.waiting = True
