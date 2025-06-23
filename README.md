@@ -86,10 +86,10 @@ elevator_sim/
 
 | Nombre             | Tipo                  | Descripción |
 |--------------------|-----------------------|-------------|
-| `elevators`        | `list[Elevator]`      | Lista de ascensores gestionados por el sistema. |
-| `controllers`      | `list[Controller]`    | Lista de controladores (uno por ascensor o compartidos). |
+| `elevators`        | `list[Elevator]`      | lista de ascensores gestionados por el sistema. |
+| `controllers`      | `list[Controller]`    | lista de controladores (uno por ascensor o compartidos). |
 | `floor_panels`     | `dict[int, FloorPanel]` | Paneles de llamada por piso (clave = número de piso). |
-| `users`            | `list[User]`          | Lista global de usuarios en el edificio. |
+| `users`            | `list[User]`          | lista global de usuarios en el edificio. |
 | `logger`           | `Logger`              | Sistema de logging común para todos los componentes. |
 | `min_floor`        | `int`                 | Piso mínimo del edificio. |
 | `max_floor`        | `int`                 | Piso máximo del edificio. |
@@ -126,11 +126,11 @@ elevator_sim/
 |------------------|------------------|-------------|
 | `id`             | `int`            | Identificador único del controlador. Útil para escalado, trazabilidad y depuración. |
 | `elevator`       | `Elevator`       | Instancia del ascensor gestionado. |
-| `users`          | `list[User]`     | Lista de usuarios activos en la simulación. |
-| `floor_panels`   | `list[FloorPanel]` | Lista de paneles de llamada externa, uno por piso. |
+| `users`          | `list[User]`     | lista de usuarios activos en la simulación. |
+| `floor_panels`   | `list[FloorPanel]` | lista de paneles de llamada externa, uno por piso. |
 | `logger`         | `Logger`         | Sistema de registro de eventos. |
 | `time`           | `float`          | Tiempo acumulado de simulación. |
-| `pending_requests` | `list[int]`    | Lista de pisos con llamadas externas pendientes. |
+| `pending_requests` | `list[int]`    | lista de pisos con llamadas externas pendientes. |
 
 ---
 
@@ -168,7 +168,7 @@ elevator_sim/
 | `min_floor`         | `int`               | Piso mínimo accesible.                                                     |
 | `max_floor`         | `int`               | Piso máximo accesible.                                                     |
 | `current_floor`     | `int`               | Piso actual donde se encuentra.                                            |
-| `target_floors`     | `list[int]`         | Lista de pisos destino pendientes.                                         |
+| `target_floors`     | `list[int]`         | lista de pisos destino pendientes.                                         |
 | `direction`         | `str`               | Dirección actual: `"up"`, `"down"` o `"idle"`.                             |
 | `is_moving`         | `bool`              | Indica si el ascensor está desplazándose.                                 |
 | `door_status`       | `str`               | Estado de la puerta: `"open"`, `"closed"`, `"opening"`, `"closing"`.      |
@@ -180,7 +180,7 @@ elevator_sim/
 | `emergency_state`   | `bool`              | Indica si se encuentra en modo de emergencia.                              |
 | `motor`             | `Motor`             | Referencia al motor responsable del movimiento.                            |
 | `door`              | `Door`              | Instancia del sistema de puertas del ascensor.                             |
-| `sensors`           | `list[Sensor]`      | Lista de sensores instalados.                                              |
+| `sensors`           | `list[Sensor]`      | lista de sensores instalados.                                              |
 | `display`           | `Display`           | Pantalla que indica estado, dirección y piso.                              |
 | `logger`            | `Logger`            | Sistema de log para registrar eventos.                                     |
 
@@ -364,7 +364,7 @@ elevator_sim/
 
 | Nombre        | Tipo          | Descripción |
 |----------------|---------------|-------------|
-| `logs`         | `list[str]`   | Lista de entradas de log en formato de texto plano. |
+| `logs`         | `list[str]`   | lista de entradas de log en formato de texto plano. |
 | `enabled`      | `bool`        | Indica si el logger está activo o silenciado. |
 | `log_level`    | `str`         | Nivel de detalle del log: `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`. |
 | `timestamp_fn` | `Callable`    | Función para obtener el tiempo actual (útil para simular o testear). |

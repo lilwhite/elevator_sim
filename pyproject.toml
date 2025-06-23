@@ -1,0 +1,22 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "elevator-sim"
+version = "0.1.0"
+description = "Simulador de sistema de ascensores en Python"
+readme = "README.md"
+authors = [
+  { name="Mario Blanco", email="mario.blanco85@outlook.es" }
+]
+requires-python = ">=3.9"
+
+[project.urls]
+"Homepage" = "https://github.com/lilwhite/elevator_sim"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["simulation*"]

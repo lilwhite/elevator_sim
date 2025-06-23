@@ -1,5 +1,23 @@
+# Byte-compiled / cache
 __pycache__/
 *.py[cod]
+
+# Entornos virtuales
 .venv/
-.env
+
+# Egg / wheel metadata
 *.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+
+# pytest cache
+.pytest_cache/
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Editor / OS
+.vscode/
+.DS_Store
