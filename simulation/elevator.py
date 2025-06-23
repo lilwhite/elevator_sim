@@ -3,9 +3,9 @@ from .door import Door
 from .display import Display
 from .sensor import Sensor
 from .logger import Logger
-from typing import List
+from typing import List, TYPE_CHECKING
 from .user import User
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from .elevator_system import ElevatorSystem
 
@@ -24,50 +24,47 @@ class Elevator:
         weight_limit_kg: float = 600.0,
         speed_mps: float = 1.0,
     ):
-        # guarda la referencia al sistema completo
-        self.system = system    # type: ElevatorSystem
+        # Referencia al sistema
+        self.system = system
 
         # Identificación y límites
-        self.id: int = id
-        self.min_floor: int = min_floor
-        self.max_floor: int = max_floor
+        self.id = id
+        self.min_floor = min_floor
+        self.max_floor = max_floor
 
         # Estado dinámico
-        self.current_floor: int = min_floor
-        self.position_m: float = float(min_floor)  # metros/floors
-        self.target_floors: list[int] = []
-        self.direction: str = "idle"  # "up", "down", "idle"
-        self.is_moving: bool = False
+        self.current_floor = min_floor
+        self.position_m = float(min_floor)
+        self.target_floors: List[int] = []
+        self.direction = "idle"   # "up", "down", "idle"
+        self.is_moving = False
 
-        # Puertas
-        self.door_status: str = "closed"  # "open", "opening", "closing"
-        self.door_timer: float = 0.0
-        self.speed_mps: float = speed_mps
+        # Control de puertas
+        self.door = Door(id=self.id)
+        self._just_opened = False
+
+        # Velocidad
+        self.speed_mps = speed_mps
 
         # Carga
-        self.weight_limit_kg: float = weight_limit_kg
-        self.current_weight_kg: float = 0.0
-        self.emergency_state: bool = False
+        self.weight_limit_kg = weight_limit_kg
+        self.current_weight_kg = 0.0
+        self.emergency_state = False
 
-        # Componentes internos
-        self.motor: Motor = Motor(id=self.id, max_speed=self.speed_mps)
-        self.door: Door = Door(id=self.id)
-        self.sensors: list[Sensor] = []
-        self.display: Display = Display(id=self.id)
-        self.logger: Logger = Logger()
-        self.elevators: list[Elevator] = []
+        # Componentes auxiliares
+        self.motor = Motor(id=self.id, max_speed=self.speed_mps)
+        self.display = Display(id=self.id)
+        self.logger = Logger()
 
-        # inicializamos la lista de pasajeros dentro del ascensor
+        # Pasajeros dentro
         self.passengers: List[User] = []
 
 
     def call(self, floor: int) -> None:
-        """Solicitud externa desde un FloorPanel: añade floor a target_floors si es válido."""
         if self.min_floor <= floor <= self.max_floor and floor not in self.target_floors:
             self.target_floors.append(floor)
 
     def select_floor(self, floor: int) -> None:
-        """Solicitud interna desde dentro de la cabina: añade floor a target_floors si es válido."""
         if self.min_floor <= floor <= self.max_floor and floor not in self.target_floors:
             self.target_floors.append(floor)
 
@@ -75,131 +72,109 @@ class Elevator:
         if self.emergency_state:
             return
 
-        # 1) Puertas en transición
-        if self.door_status in ("opening", "closing"):
-            self.door.tick(dt)
-            if self.door.status == "open":
-                self.door_status = "open"
-                self.unload_passengers()
-                self.load_passengers()
-            elif self.door.status == "closed" and self.door_status == "closing":
-                self.door_status = "closed"
+        # 1) Avanza la animación de la puerta
+        self.door.tick(dt)
+
+        # 2) Si justo acabó de abrir, cargo/descargo y cierro
+        if self._just_opened:
+            self.unload_passengers()
+            self.load_passengers()
+            self._just_opened = False
+            self.door.close()
             return
 
-        # 2) Auto-cierre tras abrir
-        if self.door_status == "open" and self.door.auto_close:
-            self.close_door()
+        # 3) Si la puerta está en transición, esperamos
+        if self.door.is_moving():
             return
 
-        # 3) Sin peticiones → idle
+        # 4) Si la puerta está completamente abierta y no hemos marcado aún
+        if self.door.is_open() and not self._just_opened:
+            # marcamos para que en el siguiente tick ejecute load/unload
+            self._just_opened = True
+            return
+
+        # 5) Aquí la puerta está completamente cerrada
         if not self.target_floors:
             self.is_moving = False
             return
 
-        # 4) Mover hacia siguiente planta
+        # 6) Movemos hacia la siguiente parada
         self.is_moving = True
         self.move_towards_target(dt)
+
 
     def move_towards_target(self, dt: float) -> None:
         if not self.target_floors:
             return
 
         next_floor = self.target_floors[0]
-        # Asegura dirección y velocidad
         self.update_direction()
-        # Mueve la posición “física”
+
+        # Mover "físico"
         delta = self.speed_mps * dt * (1 if self.direction == "up" else -1)
         self.position_m += delta
 
-        # Actualiza el piso actual como la parte entera de la posición
+        # Actualizar piso actual
         new_floor = int(self.position_m)
         if new_floor != self.current_floor:
             self.current_floor = new_floor
 
-        # Si alcanzamos o superamos el destino:
-        if (self.direction == "up"   and self.position_m >= next_floor) or \
-        (self.direction == "down" and self.position_m <= next_floor):
-            # Fija la posición exacta y el piso
+        # Si llegamos o pasamos el destino
+        if ((self.direction == "up" and self.position_m >= next_floor) or
+            (self.direction == "down" and self.position_m <= next_floor)):
             self.position_m = float(next_floor)
             self.current_floor = next_floor
-            # Retira la petición atendida
             self.target_floors.pop(0)
-            # Abre puertas
             self.open_door()
 
 
     def open_door(self) -> None:
-        """Inicia la apertura de la puerta."""
-        # Llama al componente Door
         self.door.open()
-        self.door_status = "opening"
-        self.door_timer = self.door.open_duration
+        # Al terminar la apertura, en el siguiente step marcaremos _just_opened
 
-    def close_door(self) -> None:
-        self.door.close()
-        self.door_status = "closing"
-        self.door_timer = self.door.open_duration
-
-    def check_overload(self) -> bool:
-        """Devuelve True si el peso supera weight_limit_kg."""
-        return self.current_weight_kg > self.weight_limit_kg
-
-    def update_direction(self) -> None:
-        if not self.target_floors:
-            self.direction = "idle"
-        else:
-            next_floor = self.target_floors[0]
-            # si estoy justo en destino pero aún “is_moving”, mantengo la flecha
-            if self.current_floor == next_floor and self.is_moving:
-                return
-            if next_floor > self.current_floor:
-                self.direction = "up"
-            elif next_floor < self.current_floor:
-                self.direction = "down"
-            else:
-                self.direction = "idle"
 
     def activate_emergency(self) -> None:
-        """Detiene operaciones y abre puertas si es posible."""
         self.emergency_state = True
         self.is_moving = False
         self.target_floors.clear()
         self.open_door()
 
     def reset_emergency(self) -> None:
-        """Sale del estado de emergencia."""
         self.emergency_state = False
-        # Restablecer estado de puerta si estaba abierta
-        if self.door_status == "opening":
-            self.door_status = "closed"
-            self.door_timer = 0.0
+        # No devolvemos la puerta a cerrar aquí, se manejará en step()
 
     def is_idle(self) -> bool:
-        """True si no hay peticiones y no se está moviendo."""
-        return len(self.target_floors) == 0 and not self.is_moving
-    
-    def unload_passengers(self):
-        """
-        Saca del ascensor a todos los pasajeros cuyo destino
-        coincide con la planta actual.
-        """
-        offboard = [u for u in self.passengers if u.destination == self.current_floor]
-        for user in offboard:
-            self.passengers.remove(user)
-            self.total_weight -= user.weight
-            user.exit()  # o la llamada que uses para marcar su salida
-            self.logger.info(f"User {user.id} left at floor {self.current_floor}")
+        return not self.target_floors and not self.is_moving
 
-    def load_passengers(self):
-        waiting = self.system.floor_panels[self.current_floor].get_waiting_users(
-            self.current_floor,
-            self.direction,
-        )
-        # ahora waiting siempre es una lista
+    def unload_passengers(self) -> None:
+        offboard = [u for u in self.passengers
+                    if u.destination == self.current_floor]
+        for u in offboard:
+            self.passengers.remove(u)
+            self.current_weight_kg -= u.weight_kg
+            u.exit(self.current_floor)
+            self.logger.info(f"User {u.id} left at floor {self.current_floor}")
+
+    def load_passengers(self) -> None:
+        waiting = self.system.floor_panels[self.current_floor] \
+                            .get_waiting_users(self.current_floor,
+                                               self.direction)
         for u in waiting:
             self.passengers.append(u)
-            self.total_weight += u.weight
-            # pulsar el botón interno de destino
+            self.current_weight_kg += u.weight_kg
             self.internal_panel.press(u.destination)
+            self.logger.info(
+                f"User {u.id} boarded at floor {self.current_floor} → dest {u.destination}"
+            )
 
-
+    def update_direction(self) -> None:
+        if not self.target_floors:
+            self.direction = "idle"
+            return
+        next_floor = self.target_floors[0]
+        if next_floor > self.current_floor:
+            self.direction = "up"
+        elif next_floor < self.current_floor:
+            self.direction = "down"
+        else:
+            self.direction = "idle"

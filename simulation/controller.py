@@ -69,16 +69,17 @@ class Controller:
     def update_users(self) -> None:
         """
         Gestiona las interacciones de los usuarios:
-          1. Si un usuario está esperando y el ascensor ha llegado a su piso con puertas abiertas → entra.
-          2. Tras entrar, si tiene un destino, se añade la petición interna.
-          3. Si un usuario está dentro y el ascensor ha llegado a su destino con puertas abiertas → sale.
+        1) Si un usuario está esperando y el ascensor ha llegado a su piso con puertas OPEN → entra.
+        2) Tras entrar, si tiene un destino, se añade la petición interna.
+        3) Si un usuario está dentro y el ascensor ha llegado a su destino con puertas OPEN → sale.
         """
+
         for user in self.users:
             # 1) Entrada al ascensor
             if user.waiting and not user.inside_elevator:
                 if (
                     self.elevator.current_floor == user.current_floor
-                    and self.elevator.door_status == "open"
+                    and self.elevator.door.is_open()
                 ):
                     user.enter_elevator()
                     self.log_event(
@@ -92,12 +93,16 @@ class Controller:
             if (
                 user.inside_elevator
                 and user.destination_floor == self.elevator.current_floor
-                and self.elevator.door_status == "open"
+                and self.elevator.door.is_open()
             ):
                 user.exit_elevator()
-                self.log_event(f"User {user.id} exited elevator at floor {self.elevator.current_floor}")
+                self.log_event(
+                    f"User {user.id} exited elevator at floor {self.elevator.current_floor}"
+                )
+                # Limpio su destino de la lista si sigue ahí
                 if self.elevator.current_floor in self.elevator.target_floors:
                     self.elevator.target_floors.remove(self.elevator.current_floor)
+
 
     def log_event(self, event: str) -> None:
         """Envía un evento al logger."""

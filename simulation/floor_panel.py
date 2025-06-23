@@ -3,9 +3,10 @@ from .user import User
 
 class FloorPanel:
     """
-    Representa el panel de llamada externa en cada piso con botones de subida y bajada.
+    Panel externo de cada piso:  
+    - mantiene cola de usuarios que han llamdo desde aquí  
+    - enciende/apaga indicadores según dirección  
     """
-
     def __init__(
         self,
         id: int,
@@ -13,78 +14,80 @@ class FloorPanel:
         min_floor: int,
         max_floor: int,
     ):
-        # Identificador único del panel
-        self.id: int = id
-        # Piso asociado al panel
-        self.floor: int = floor
-        # Botones de llamada disponibles
-        self.has_up_button: bool = floor < max_floor
-        self.has_down_button: bool = floor > min_floor
-        # Estado de los botones
-        self.up_pressed: bool = False
-        self.down_pressed: bool = False
-        # Indicadores luminosos
-        self.indicator_up: bool = False
-        self.indicator_down: bool = False
-        # Interna: cola de usuarios que han llamado desde este piso
+        self.id = id
+        self.floor = floor
+        self.has_up_button = floor < max_floor
+        self.has_down_button = floor > min_floor
+        self.up_pressed = False
+        self.down_pressed = False
+        self.indicator_up = False
+        self.indicator_down = False
+        # Cola interna de usuarios que esperan en este piso
         self._waiting: List[User] = []
 
     def press_up(self) -> None:
-        """Marca el botón de subida como presionado y enciende la luz si existe."""
         if self.has_up_button:
             self.up_pressed = True
             self.indicator_up = True
 
     def press_down(self) -> None:
-        """Marca el botón de bajada como presionado y enciende la luz si existe."""
         if self.has_down_button:
             self.down_pressed = True
             self.indicator_down = True
 
     def reset_up(self) -> None:
-        """Resetea el estado del botón e indicador de subida."""
         self.up_pressed = False
         self.indicator_up = False
 
     def reset_down(self) -> None:
-        """Resetea el estado del botón e indicador de bajada."""
         self.down_pressed = False
         self.indicator_down = False
 
     def is_active(self) -> bool:
-        """Devuelve True si alguno de los botones está presionado."""
         return self.up_pressed or self.down_pressed
 
     def get_requested_directions(self) -> List[str]:
-        """Devuelve lista de direcciones solicitadas: ['up'], ['down'], o ambas."""
-        directions: List[str] = []
-        if self.up_pressed:
-            directions.append("up")
-        if self.down_pressed:
-            directions.append("down")
-        return directions
+        dirs = []
+        if self.up_pressed: dirs.append("up")
+        if self.down_pressed: dirs.append("down")
+        return dirs
 
     def call(self, user: User) -> None:
-        """El usuario hace una llamada desde esta planta."""
+        """Añade usuario a la cola y enciende el indicador correcto."""
         self._waiting.append(user)
+        if user.call_direction == "up":
+            self.press_up()
+        else:
+            self.press_down()
 
     def get_waiting_users(self, current_floor: int, direction: str) -> List[User]:
         """
-        Devuelve todos los usuarios en cola en esta planta cuya dirección coincide
-        con la del ascensor, luego vacía la cola interna.
-        Siempre devuelve una lista (posiblemente vacía).
+        Devuelve sólo los usuarios en cola cuya dirección coincide
+        con la del ascensor, y los elimina de la cola interna.
+        Mantiene el indicador de la otra dirección si procede.
         """
-        # Filtrar según sea necesario (por ahora ignoramos dirección y devolvemos todos)
-        users = self._waiting.copy()
-        self._waiting.clear()
-        # apagar indicadores de llamada tras recoger
-        if direction == "up":
+        matches: List[User] = []
+        rest: List[User] = []
+
+        for u in self._waiting:
+            if u.call_direction == direction:
+                matches.append(u)
+            else:
+                rest.append(u)
+
+        # La cola interna se convierte en los que no coincidían
+        self._waiting = rest
+
+        # Si ya no quedan “up” pendientes, apaga el indicador correspondiente
+        if direction == "up" and not any(u.call_direction == "up" for u in self._waiting):
             self.reset_up()
-        elif direction == "down":
+        # Igual para “down”
+        if direction == "down" and not any(u.call_direction == "down" for u in self._waiting):
             self.reset_down()
-        return users
+
+        return matches
 
     def clear_call(self, floor: int, user_id: str) -> None:
-        """Quita la solicitud de ese usuario en ese piso."""
-        # eliminar cualquier usuario con ese id en la cola
+        """Elimina de la cola a un usuario específico (por cancelación, p.ej.)."""
         self._waiting = [u for u in self._waiting if u.id != user_id]
+        # (podrías tocar también reset_* si queda vacío para esa dirección)

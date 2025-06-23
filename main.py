@@ -82,7 +82,7 @@ def update_displays(system: ElevatorSystem) -> None:
          disp.update_floor(elev.current_floor)
          arrow = {"up": "↑", "down": "↓"}.get(elev.direction, "—")
          disp.update_direction(arrow)
-         disp.update_door(elev.door_status)
+         disp.update_door(elev.door.status)
          # 1) Calcula quién está dentro y su peso
          inside = [(u.id, u.weight_kg) for u in ctrl.users if u.inside_elevator]
          inside_str = ", ".join(f"User{uid}({w:.1f}kg)" for uid, w in inside) or "None"
