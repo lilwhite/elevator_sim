@@ -1,6 +1,7 @@
 # simulation/user.py
 
 from typing import Optional
+import logging
 
 class User:
     def __init__(
@@ -16,13 +17,11 @@ class User:
         self.waiting: bool = False
         self.weight_kg: float = weight_kg
 
-    def call_elevator(self, direction: str) -> None:
+    def call_elevator(self, direction: str):
         """
-        Marca al usuario como en espera y (opcional) almacena la dirección deseada.
+        Llamada al botón de planta (externa).
         """
-        self.waiting = True
-        # Si necesitas almacenar direction para lógica futura, podrías hacerlo:
-        # self.call_direction = direction
+        logging.info(f"User {self.id} called elevator at floor {self.current_floor} going {direction}")
 
     def enter_elevator(self) -> None:
         """
@@ -32,12 +31,13 @@ class User:
             self.inside_elevator = True
             self.waiting = False
 
-    def select_floor(self, floor: int) -> None:
+    def select_floor(self, floor: int):
         """
-        Selecciona el piso destino dentro del ascensor.
+        Se invoca cuando el usuario YA está dentro del ascensor.
+        Guarda su destino interno.
         """
-        if self.inside_elevator:
-            self.destination_floor = floor
+        self.destination_floor = floor
+        logging.info(f"User {self.id} selected internal floor {floor}")
 
     def exit_elevator(self) -> None:
         """

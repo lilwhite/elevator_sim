@@ -76,23 +76,25 @@ def generate_user_events(
 def update_displays(system: ElevatorSystem) -> None:
     """Sincroniza y muestra todos los Displays, peso y usuarios dentro."""
     for ctrl in system.controllers:
-         elev = ctrl.elevator
-         disp = elev.display
-         # Actualizar display básico
-         disp.update_floor(elev.current_floor)
-         arrow = {"up": "↑", "down": "↓"}.get(elev.direction, "—")
-         disp.update_direction(arrow)
-         disp.update_door(elev.door.status)
-         # 1) Calcula quién está dentro y su peso
-         inside = [(u.id, u.weight_kg) for u in ctrl.users if u.inside_elevator]
-         inside_str = ", ".join(f"User{uid}({w:.1f}kg)" for uid, w in inside) or "None"
+        elev = ctrl.elevator
+        disp = elev.display
 
-         # 2) Imprime display + peso + listado de pasajeros
-         print(
-                f"[Display E{elev.id}] {disp.render()} "
-                f"| TotalWeight: {elev.current_weight_kg:.1f}kg "
-                f"| Inside: {inside_str}"
-            )
+        # 1) Actualizar display básico
+        disp.update_floor(elev.current_floor)
+        arrow = {"up": "↑", "down": "↓"}.get(elev.direction, "—")
+        disp.update_direction(arrow)
+        disp.update_door(elev.door.status)
+
+        # 2) Determinar quién está dentro y su peso
+        inside = [(u.id, u.weight_kg) for u in ctrl.users if u.inside_elevator]
+        inside_str = ", ".join(f"User{uid}({w:.1f}kg)" for uid, w in inside) or "None"
+
+        # 3) Print por ascensor
+        print(
+            f"[Display E{elev.id}] {disp.render()} "
+            f"| TotalWeight: {elev.current_weight_kg:.1f}kg "
+            f"| Inside: {inside_str}"
+        )
 
 
 def run_simulation(
@@ -146,8 +148,9 @@ def run_simulation(
                     user.current_floor,
                     dir_str
                 )
-                user.select_floor(evt['dest'])
+                user.destination_floor = evt['dest']
                 evt['dispatched'] = True
+        
 
         # 3) Mostrar nuevos logs
         new_logs = system.logger.logs[log_index:]

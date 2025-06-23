@@ -91,3 +91,13 @@ class FloorPanel:
         """Elimina de la cola a un usuario específico (por cancelación, p.ej.)."""
         self._waiting = [u for u in self._waiting if u.id != user_id]
         # (podrías tocar también reset_* si queda vacío para esa dirección)
+
+    def pop_waiting_users(self, floor: int, direction: str) -> List[User]:
+        # reemplaza 'waiting_users' por el nombre real en tu clase
+        matched_users = self.get_waiting_users(floor, direction)
+        if matched_users:
+            self.indicator_up = direction == "up"
+            self.indicator_down = direction == "down"
+        return matched_users
+    
+    

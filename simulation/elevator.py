@@ -5,6 +5,7 @@ from .sensor import Sensor
 from .logger import Logger
 from typing import List, TYPE_CHECKING
 from .user import User
+import logging
 
 if TYPE_CHECKING:
     from .elevator_system import ElevatorSystem
@@ -58,6 +59,7 @@ class Elevator:
 
         # Pasajeros dentro
         self.passengers: List[User] = []
+        self.destination_floor: int = None
 
 
     def call(self, floor: int) -> None:
@@ -130,7 +132,8 @@ class Elevator:
 
     def open_door(self) -> None:
         self.door.open()
-        # Al terminar la apertura, en el siguiente step marcaremos _just_opened
+
+        
 
 
     def activate_emergency(self) -> None:
@@ -157,15 +160,16 @@ class Elevator:
 
     def load_passengers(self) -> None:
         waiting = self.system.floor_panels[self.current_floor] \
-                            .get_waiting_users(self.current_floor,
-                                               self.direction)
+                       .pop_waiting_users(self.current_floor, self.direction)
+        self.logger.log(f"Loading users at floor {self.current_floor}: {[u.id for u in waiting]}", level="DEBUG")
         for u in waiting:
-            self.passengers.append(u)
-            self.current_weight_kg += u.weight_kg
-            self.internal_panel.press(u.destination)
-            self.logger.info(
-                f"User {u.id} boarded at floor {self.current_floor} → dest {u.destination}"
-            )
+            if self.current_weight_kg + u.weight_kg <= self.weight_limit_kg:
+                self.passengers.append(u)
+                self.current_weight_kg += u.weight_kg
+                u.enter_elevator()
+                self.logger.info(f"User {u.id} entered elevator at floor {self.current_floor}")
+            else:
+                self.logger.warning(f"User {u.id} could not enter due to weight limit")
 
     def update_direction(self) -> None:
         if not self.target_floors:
