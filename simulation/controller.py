@@ -95,9 +95,9 @@ class Controller:
                 and self.elevator.door_status == "open"
             ):
                 user.exit_elevator()
-                self.log_event(
-                    f"User {user.id} exited elevator at floor {user.current_floor}"
-                )
+                self.log_event(f"User {user.id} exited elevator at floor {self.elevator.current_floor}")
+                if self.elevator.current_floor in self.elevator.target_floors:
+                    self.elevator.target_floors.remove(self.elevator.current_floor)
 
     def log_event(self, event: str) -> None:
         """Envía un evento al logger."""

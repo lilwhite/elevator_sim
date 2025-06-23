@@ -57,25 +57,31 @@ class Elevator:
             self.target_floors.append(floor)
 
     def step(self, dt: float) -> None:
-        # 1) Emergencia
         if self.emergency_state:
             return
 
-        # 2) Anima puertas si están moviéndose
+        # 1) Puertas en transición
         if self.door_status in ("opening", "closing"):
             self.door.tick(dt)
+            if self.door.status == "open" and self.door_status == "opening":
+                self.door_status = "open"
+            elif self.door.status == "closed" and self.door_status == "closing":
+                self.door_status = "closed"
             return
 
-        # 3) Si no hay peticiones, idle
+        # 2) Auto-cierre tras abrir
+        if self.door_status == "open" and self.door.auto_close:
+            self.close_door()
+            return
+
+        # 3) Sin peticiones → idle
         if not self.target_floors:
             self.is_moving = False
             return
 
-        # 4) Arrancamos movimiento delegando en move_towards_target
+        # 4) Mover hacia siguiente planta
         self.is_moving = True
         self.move_towards_target(dt)
-
-
 
     def move_towards_target(self, dt: float) -> None:
         if not self.target_floors:
@@ -113,20 +119,22 @@ class Elevator:
         self.door_timer = self.door.open_duration
 
     def close_door(self) -> None:
-        """Inicia el cierre de la puerta."""
         self.door.close()
         self.door_status = "closing"
+        self.door_timer = self.door.open_duration
 
     def check_overload(self) -> bool:
         """Devuelve True si el peso supera weight_limit_kg."""
         return self.current_weight_kg > self.weight_limit_kg
 
     def update_direction(self) -> None:
-        """Recalcula self.direction según el primer piso en target_floors."""
         if not self.target_floors:
             self.direction = "idle"
         else:
             next_floor = self.target_floors[0]
+            # si estoy justo en destino pero aún “is_moving”, mantengo la flecha
+            if self.current_floor == next_floor and self.is_moving:
+                return
             if next_floor > self.current_floor:
                 self.direction = "up"
             elif next_floor < self.current_floor:

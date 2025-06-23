@@ -6,7 +6,7 @@ class Door:
     def __init__(
         self,
         id: int,
-        open_duration: float = 5.0,
+        open_duration: float = 1.0,
     ):
         # Identificador único de la puerta
         self.id: int = id
