@@ -7,9 +7,11 @@ y trazabilidad completa del proceso: llamada externa, llegada,
 entradas/salidas detectando peso y cierre de puertas.
 """
 
-import time
 import random
-from simulation import ElevatorSystem, Elevator, Controller, User
+from simulation.elevator_system import ElevatorSystem
+from simulation.elevator        import Elevator
+from simulation.controller      import Controller
+from simulation.user            import User
 
 
 def setup_system(min_floor: int, max_floor: int) -> ElevatorSystem:
@@ -26,6 +28,7 @@ def setup_elevators(
     """Añade instancias de Elevator y Controller al sistema."""
     for spec in specs:
         elev = Elevator(
+            system=system,
             id=spec["id"],
             min_floor=spec.get("min_floor", system.min_floor),
             max_floor=spec.get("max_floor", system.max_floor),

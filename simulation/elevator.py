@@ -3,6 +3,12 @@ from .door import Door
 from .display import Display
 from .sensor import Sensor
 from .logger import Logger
+from typing import List
+from .user import User
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .elevator_system import ElevatorSystem
+
 
 class Elevator:
     """
@@ -12,11 +18,15 @@ class Elevator:
     def __init__(
         self,
         id: int,
+        system: "ElevatorSystem",
         min_floor: int = 1,
         max_floor: int = 10,
-        weight_limit_kg: float = 1600.0,
+        weight_limit_kg: float = 600.0,
         speed_mps: float = 1.0,
     ):
+        # guarda la referencia al sistema completo
+        self.system = system    # type: ElevatorSystem
+
         # Identificación y límites
         self.id: int = id
         self.min_floor: int = min_floor
@@ -45,6 +55,11 @@ class Elevator:
         self.sensors: list[Sensor] = []
         self.display: Display = Display(id=self.id)
         self.logger: Logger = Logger()
+        self.elevators: list[Elevator] = []
+
+        # inicializamos la lista de pasajeros dentro del ascensor
+        self.passengers: List[User] = []
+
 
     def call(self, floor: int) -> None:
         """Solicitud externa desde un FloorPanel: añade floor a target_floors si es válido."""
@@ -63,8 +78,10 @@ class Elevator:
         # 1) Puertas en transición
         if self.door_status in ("opening", "closing"):
             self.door.tick(dt)
-            if self.door.status == "open" and self.door_status == "opening":
+            if self.door.status == "open":
                 self.door_status = "open"
+                self.unload_passengers()
+                self.load_passengers()
             elif self.door.status == "closed" and self.door_status == "closing":
                 self.door_status = "closed"
             return
@@ -160,3 +177,29 @@ class Elevator:
     def is_idle(self) -> bool:
         """True si no hay peticiones y no se está moviendo."""
         return len(self.target_floors) == 0 and not self.is_moving
+    
+    def unload_passengers(self):
+        """
+        Saca del ascensor a todos los pasajeros cuyo destino
+        coincide con la planta actual.
+        """
+        offboard = [u for u in self.passengers if u.destination == self.current_floor]
+        for user in offboard:
+            self.passengers.remove(user)
+            self.total_weight -= user.weight
+            user.exit()  # o la llamada que uses para marcar su salida
+            self.logger.info(f"User {user.id} left at floor {self.current_floor}")
+
+    def load_passengers(self):
+        waiting = self.system.floor_panels[self.current_floor].get_waiting_users(
+            self.current_floor,
+            self.direction,
+        )
+        # ahora waiting siempre es una lista
+        for u in waiting:
+            self.passengers.append(u)
+            self.total_weight += u.weight
+            # pulsar el botón interno de destino
+            self.internal_panel.press(u.destination)
+
+

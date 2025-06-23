@@ -1,11 +1,14 @@
 # simulation/elevator_system.py
 
-from .elevator import Elevator
 from .controller import Controller
 from .floor_panel import FloorPanel
 from .user import User
 from .logger import Logger
 from typing import List, Dict
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .elevator import Elevator
 
 
 class ElevatorSystem:
@@ -17,12 +20,25 @@ class ElevatorSystem:
     ):
         self.min_floor = min_floor
         self.max_floor = max_floor
-        self.elevators: List[Elevator] = []
+        # import dinámico para evitar circular
+        from .elevator import Elevator
+        self.elevators: list[Elevator] = []
         self.controllers: List[Controller] = []
         self.floor_panels: Dict[int, FloorPanel] = {}
         self.users: List[User] = []
         self.logger: Logger = logger or Logger()
         self.time: float = 0.0
+
+        # paneles de planta
+        self.floor_panel: Dict[int, FloorPanel] = {
+            f: FloorPanel(
+                id=f,
+                floor=f,
+                min_floor=self.min_floor,
+                max_floor=self.max_floor
+            )
+            for f in range(self.min_floor, self.max_floor + 1)        
+        }
 
     def populate_panels(self) -> None:
         """Crea un FloorPanel por cada piso entre min_floor y max_floor."""
@@ -35,7 +51,7 @@ class ElevatorSystem:
             )
             self.floor_panels[floor] = panel
 
-    def add_elevator(self, elevator: Elevator, controller: Controller) -> None:
+    def add_elevator(self, elevator: "Elevator", controller: Controller) -> None:
         self.elevators.append(elevator)
         # Vinculamos el listado global de usuarios al controlador
         controller.users = self.users

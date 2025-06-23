@@ -1,3 +1,6 @@
+from typing import List
+from .user import User
+
 class FloorPanel:
     """
     Representa el panel de llamada externa en cada piso con botones de subida y bajada.
@@ -23,6 +26,8 @@ class FloorPanel:
         # Indicadores luminosos
         self.indicator_up: bool = False
         self.indicator_down: bool = False
+        # Interna: cola de usuarios que han llamado desde este piso
+        self._waiting: List[User] = []
 
     def press_up(self) -> None:
         """Marca el botón de subida como presionado y enciende la luz si existe."""
@@ -50,11 +55,36 @@ class FloorPanel:
         """Devuelve True si alguno de los botones está presionado."""
         return self.up_pressed or self.down_pressed
 
-    def get_requested_directions(self) -> list[str]:
+    def get_requested_directions(self) -> List[str]:
         """Devuelve lista de direcciones solicitadas: ['up'], ['down'], o ambas."""
-        directions: list[str] = []
+        directions: List[str] = []
         if self.up_pressed:
             directions.append("up")
         if self.down_pressed:
             directions.append("down")
         return directions
+
+    def call(self, user: User) -> None:
+        """El usuario hace una llamada desde esta planta."""
+        self._waiting.append(user)
+
+    def get_waiting_users(self, current_floor: int, direction: str) -> List[User]:
+        """
+        Devuelve todos los usuarios en cola en esta planta cuya dirección coincide
+        con la del ascensor, luego vacía la cola interna.
+        Siempre devuelve una lista (posiblemente vacía).
+        """
+        # Filtrar según sea necesario (por ahora ignoramos dirección y devolvemos todos)
+        users = self._waiting.copy()
+        self._waiting.clear()
+        # apagar indicadores de llamada tras recoger
+        if direction == "up":
+            self.reset_up()
+        elif direction == "down":
+            self.reset_down()
+        return users
+
+    def clear_call(self, floor: int, user_id: str) -> None:
+        """Quita la solicitud de ese usuario en ese piso."""
+        # eliminar cualquier usuario con ese id en la cola
+        self._waiting = [u for u in self._waiting if u.id != user_id]
