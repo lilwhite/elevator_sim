@@ -149,8 +149,17 @@ def run_simulation(
                     dir_str
                 )
                 user.destination_floor = evt['dest']
-                evt['dispatched'] = True
-        
+                evt['dispatched'] = True                  
+                
+        # 2.5) Actualizar estado de puertas y usuarios
+        for ctrl in system.controllers:
+            elev = ctrl.elevator
+            if elev.door.status == "open":
+                # Permitir que los usuarios entren/salgan
+                for user in ctrl.users:
+                    if user.waiting and user.current_floor == elev.current_floor:
+                        user.enter_elevator()
+                        elev.door.close()
 
         # 3) Mostrar nuevos logs
         new_logs = system.logger.logs[log_index:]
@@ -158,7 +167,7 @@ def run_simulation(
             print(entry)
         log_index = len(system.logger.logs)
 
-        # 4) Actualizar peso en cabina
+        # # 4) Actualizar peso en cabina
         for ctrl in system.controllers:
             elev = ctrl.elevator
             elev.current_weight_kg = sum(
